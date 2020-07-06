@@ -16,7 +16,7 @@ import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import Constant from "common/Constant";
 import axios from "axios";
 import { validateRequired } from "common/Validator";
-import ToastBody from "reactstrap/lib/ToastBody";
+import Loading from 'common/Loading';
 const options = Constant.OPTIONS_TABLE;
 
 const PATH_PARAMETRO_SERVICE = Constant.HORARIO_API + "/parametro";
@@ -208,7 +208,7 @@ class Parametros extends Component {
     } = this.state;
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/> 
     }
 
     let messageLabel;

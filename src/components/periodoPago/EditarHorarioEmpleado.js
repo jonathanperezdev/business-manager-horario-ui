@@ -9,6 +9,7 @@ import Datetime from "react-datetime";
 import 'css/react-datetime.css';
 import HorarioDiaComponent from 'common/HorarioDiaComponent';
 import Moment from 'moment';
+import Loading from 'common/Loading';
 
 const TIME_FORMAT = Constant.TIME_FORMAT;
 const DATE_FORMAT = Constant.DATE_FORMAT;
@@ -110,7 +111,7 @@ class EditarHorarioEmpleado extends Component {
     }
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/>
     }
 
     const modal = <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>

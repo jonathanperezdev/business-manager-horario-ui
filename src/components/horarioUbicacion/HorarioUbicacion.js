@@ -16,6 +16,7 @@ import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import "css/react-datetime.css";
 import Constant from "common/Constant";
 import axios from "axios";
+import Loading from 'common/Loading';
 
 const options = Constant.OPTIONS_TABLE;
 const PATH_HORARIO_UBICACION_SERVICE =
@@ -32,9 +33,11 @@ class HorarioUbicacion extends Component {
 
     this.state = {
       isLoading: true,
-      horarioUbicacion: [],
+      ubicaciones: [],
       ubicacion: {},
-      modal: false
+      modal: false,
+      modalDefinirHorario: false,
+      messageDefinirHorario: ''
     };
   }
 
@@ -46,7 +49,7 @@ class HorarioUbicacion extends Component {
           this.setState({ isLoading: false });
         } else {
           rowId = result.data[0].id;
-          this.setState({ horarioUbicacion: result.data, isLoading: false });
+          this.setState({ ubicaciones: result.data, isLoading: false });
         }
       })
       .catch(error =>
@@ -54,21 +57,35 @@ class HorarioUbicacion extends Component {
           error,
           formState: "error",
           isLoading: false,
-          modal: false
+          modal: false,
+          modalDefinirHorario: false
         })
       );
   }
 
-  edit = id => {
+  definirHorario = id => {
+
     let path = `horarioUbicacion/${id}`;
     this.props.history.push(path);
   };
 
-  create = () => {
-    if(this.validateNuevoHorario()){
-      let path = `horarioUbicacion/new`;
-      this.props.history.push(path);
+  toggleDefinirHorario = () => {
+    let ubicacion = this.state.ubicaciones.find(
+      i => i.id == rowId
+    );
+
+    let messageDefinirHorario;    
+    if(!ubicacion.horarioSemana.lunes) {
+      messageDefinirHorario = 'Esta seguro de definir el horario por default para la ubicacion '+ubicacion.nombre+'?';
+    } else {
+      messageDefinirHorario = 'Esta seguro de modificar el horario para la ubicacion '+ubicacion.nombre+'?'      
     }
+
+    this.setState({
+      modalDefinirHorario: !this.state.modalDefinirHorario,
+      messageDefinirHorario: messageDefinirHorario,
+      ubicacion: ubicacion
+    });
   };
 
   remove = async id => {
@@ -81,18 +98,19 @@ class HorarioUbicacion extends Component {
       }
     })
       .then(() => {
-        let ubicacion = this.state.horarioUbicacion.find(
+        let ubicacion = this.state.ubicaciones.find(
           i => i.id == id
         );
 
-        let updatedHorarioUbicacion = [...this.state.horarioUbicacion].filter(
+        let updatedUbicaciones = [...this.state.ubicaciones].filter(
           i => i.id != id
         );
 
         this.setState({
-          horarioUbicacion: updatedHorarioUbicacion,
+          ubicaciones: updatedUbicaciones,
           formState: "success",
           modal: false,
+          modalDefinirHorario: false,
           ubicacion: ubicacion
         });
       })
@@ -103,43 +121,28 @@ class HorarioUbicacion extends Component {
           formState: "error"
         })
       );
-  };
-
-  validateNuevoHorario = () => {
-    let isNingunaUbicacionSinHorario = false;
-    axios
-      .get(PATH_UBICACIONES_SIN_HORARIO_SERVICE)
-      .then(result => {
-        isNingunaUbicacionSinHorario = true;
-      })
-      .catch(error =>
-        this.setState({
-          error,
-          isLoading: false,
-          formState: "error"
-        })
-      );
-      if(isNingunaUbicacionSinHorario){
-        this.setState({formState:'fail_new'});
-      }
-      return !isNingunaUbicacionSinHorario;
-  };
+  };  
 
   onRowSelect(row, isSelected, e) {
     rowId = row["id"];
   }
 
   toggle = () => {
+    let ubicacion = this.state.ubicaciones.find(
+      i => i.id == rowId
+    );
+
     this.setState({
-      modal: !this.state.modal
+      modal: !this.state.modal,
+      ubicacion: ubicacion
     });
-  };
+  }; 
 
   render() {
-    const { horarioUbicacion, formState, error, ubicacion, isLoading } = this.state;
+    const { ubicaciones, formState, error, ubicacion, isLoading, messageDefinirHorario } = this.state;
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/>
     }
 
     let messageLabel;
@@ -194,7 +197,7 @@ class HorarioUbicacion extends Component {
 
     const selectRow = {
       mode: "radio",
-      selected: [!horarioUbicacion.horarioSemana ? rowId : 0],
+      selected: [!ubicacion.horarioSemana ? rowId : 0],
       clickToSelect: true,
       bgColor: "rgb(89, 195, 245)",
       onSelect: this.onRowSelect
@@ -203,7 +206,7 @@ class HorarioUbicacion extends Component {
     const modal = (
       <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
         <Modal.Header onClick={this.toggle}>Confirmar Eliminar</Modal.Header>
-        <Modal.Body>Esta seguro de eliminar el horario para la ubicacion{" "}{horarioUbicacion.nombre}</Modal.Body>
+        <Modal.Body>Esta seguro de eliminar el horario para la ubicacion{" "}{ubicacion.nombre}</Modal.Body>
         <Modal.Footer>
           <Button variant="outline-primary" onClick={() => this.remove(rowId)}>
             Eliminar
@@ -214,9 +217,25 @@ class HorarioUbicacion extends Component {
         </Modal.Footer>
       </Modal>
     );
+
+    const modalDefinirHorario = (
+      <Modal show={this.state.modalDefinirHorario} onClick={this.toggleDefinirHorario} className={this.props.className}>
+        <Modal.Header onClick={this.toggleDefinirHorario}>Definir Horario ubicacion {ubicacion.nombre}</Modal.Header>
+        <Modal.Body>{messageDefinirHorario}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-primary" onClick={() => this.definirHorario(rowId)}>
+            Definir Horario
+          </Button>{" "}
+          <Button variant="outline-secondary" onClick={this.toggleDefinirHorario}>
+            Cancelar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
     return (
       <div>
         {modal}
+        {modalDefinirHorario }
         <AppNavbar />
         <Container className="App">
           <h2>Horario Ubicacion</h2>
@@ -228,7 +247,7 @@ class HorarioUbicacion extends Component {
                     <Form.Group>
                       <BootstrapTable
                         keyField="id"
-                        data={horarioUbicacion}
+                        data={ubicaciones}
                         columns={columns}
                         selectRow={selectRow}
                         pagination={paginationFactory(options)}
@@ -240,8 +259,7 @@ class HorarioUbicacion extends Component {
             </Col>
             <Col>
               <Form.Group>
-                <Button variant="outline-primary" onClick={() => this.edit(rowId)}>Modificar</Button>{"    "}
-                <Button variant="outline-primary" onClick={() => this.create()}>Crear</Button>{"    "}
+                <Button variant="outline-primary" onClick={this.toggleDefinirHorario}>Definir Horario</Button>{"    "}                
                 <Button variant="outline-primary" onClick={this.toggle}>Eliminar</Button>
               </Form.Group>
             </Col>

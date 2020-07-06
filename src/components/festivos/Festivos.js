@@ -11,6 +11,7 @@ import {validateRequired} from 'common/Validator';
 import Datetime from "react-datetime";
 import 'css/react-datetime.css';
 import Moment from 'moment';
+import Loading from 'common/Loading';
 
 const options = Constant.OPTIONS_TABLE;
 
@@ -168,13 +169,7 @@ class Festivos extends Component {
     let {fields} = this.state;
     fields.festivo = date.format(DATE_FORMAT);
     this.setState({fields});
-  }
-
-  handleDate = (date) => {
-    let {fields} = this.state;
-    fields.festivo = date.format(DATE_FORMAT);
-    this.setState({fields});
-  }
+  }  
 
   handleChange(value, field) {
     let { fields } = this.state;
@@ -200,7 +195,7 @@ class Festivos extends Component {
     const {fields, festivos, isLoading, error, isExistData, errors, formState, anos } = this.state;
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/> 
     }
 
     let messageLabel;

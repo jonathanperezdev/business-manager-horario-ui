@@ -11,6 +11,7 @@ import {validateRequired} from 'common/Validator';
 import Datetime from "react-datetime";
 import 'css/react-datetime.css';
 import Moment from 'moment';
+import Loading from 'common/Loading';
 
 const options = Constant.OPTIONS_TABLE;
 const PATH_PERIODO_PAGO_SERVICE = Constant.HORARIO_API+Constant.PERIODO_PAGO_SERVICE+'/year/';
@@ -222,7 +223,7 @@ class PeriodoPago extends Component {
     }
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/>
     }
 
     const columns = [
