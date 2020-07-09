@@ -120,8 +120,8 @@ class EditarHorarioEmpleado extends Component {
                         Esta seguro de guardar el horario para el empleado
                       </ModalBody>
                       <ModalFooter>
-                        <Button variant="primary" onClick={this.save}>Guardar</Button>{' '}
-                        <Button variant="secondary" onClick={this.toggle}>Cancelar</Button>
+                        <Button variant="outline-primary" onClick={this.save}>Guardar</Button>{' '}
+                        <Button variant="outline-secondary" onClick={this.toggle}>Cancelar</Button>
                       </ModalFooter>
                     </Modal>;
 
@@ -139,7 +139,7 @@ class EditarHorarioEmpleado extends Component {
                     <Col sm="2">
                       <FormGroup>
                         <Label>Id</Label>
-                        <Input type="text"
+                        <Input
                           disabled
                           value={fields.empleado.id}/>
                       </FormGroup>
@@ -147,18 +147,18 @@ class EditarHorarioEmpleado extends Component {
                     <Col>
                       <FormGroup>
                         <Label>Nombres</Label>
-                        <Input type="text"
+                        <Input
                           disabled
                           value={fields.empleado.nombres}/>
                       </FormGroup>
                     </Col>
                     <Col>
-                      <FormGroup>
+                      <Form.Group>
                         <Label>Apellidos</Label>
-                        <Input type="text"
+                        <Form.Control
                           disabled
                           value={fields.empleado.apellidos}/>
-                      </FormGroup>
+                      </Form.Group>
                     </Col>
                   </Row>
               </Container>
@@ -191,7 +191,7 @@ class EditarHorarioEmpleado extends Component {
             </Col>
             <Col>
             <FormGroup>
-              <Button variant="primary" onClick={this.toggle}>Guardar</Button>{'    '}
+              <Button variant="outline-primary" onClick={this.toggle}>Guardar</Button>{'    '}
               </FormGroup>
             </Col>
             <Col>

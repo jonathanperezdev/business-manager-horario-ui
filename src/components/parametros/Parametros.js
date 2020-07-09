@@ -290,8 +290,7 @@ class Parametros extends Component {
                   <Col>
                     <Form.Group controlId="parametro.nombre">
                       <Form.Label>Nombre</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Control                        
                         size="25"
                         placeholder="Nombre"
                         onChange={(e) => {
@@ -306,8 +305,7 @@ class Parametros extends Component {
                   <Col>
                     <Form.Group controlId="parametro.valor">
                       <Form.Label>Valor</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Control                        
                         size="30"
                         placeholder="Valor"
                         onChange={(e) => {

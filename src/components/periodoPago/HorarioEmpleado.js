@@ -282,10 +282,10 @@ class HorarioEmpleado extends Component {
           {horarioEmpleado.nombre}
         </ModalBody>
         <ModalFooter>
-          <Button variant="primary" onClick={() => this.remove(rowId)}>
+          <Button variant="outline-primary" onClick={() => this.remove(rowId)}>
             Eliminar
           </Button>{" "}
-          <Button variant="secondary" onClick={this.toggle}>
+          <Button variant="outline-secondary" onClick={this.toggle}>
             Cancelar
           </Button>
         </ModalFooter>
@@ -308,7 +308,7 @@ class HorarioEmpleado extends Component {
                   <Col xs="2">
                     <FormGroup>
                       <Label>Fecha Inicio</Label>
-                      <Input type="text"
+                      <Input
                         disabled
                         value={this.state.periodoPago.fechaInicio}/>
                     </FormGroup>
@@ -316,7 +316,7 @@ class HorarioEmpleado extends Component {
                   <Col xs="2">
                     <FormGroup>
                       <Label>Fecha Fin</Label>
-                      <Input type="text"
+                      <Input 
                         disabled
                         value={this.state.periodoPago.fechaFin} />
                     </FormGroup>
@@ -359,11 +359,11 @@ class HorarioEmpleado extends Component {
             {tableHorario }
             <Col>
               <FormGroup>
-                <Button variant="primary" onClick={(idEmpleado, idUbicacion, idSemana) => this.edit(rowId, consultParams.ubicacion, consultParams.semana)}>
+                <Button variant="outline-primary" onClick={(idEmpleado, idUbicacion, idSemana) => this.edit(rowId, consultParams.ubicacion, consultParams.semana)}>
                   Modificar
                 </Button>
                 {"    "}
-                <Button variant="primary" onClick={this.toggle}>
+                <Button variant="outline-primary" onClick={this.toggle}>
                   Eliminar
                 </Button>
               </FormGroup>

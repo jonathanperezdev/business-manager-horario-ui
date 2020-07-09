@@ -159,7 +159,7 @@ class HorarioUbicacion extends Component {
         dataField: "id",
         text: "Id",
         isKey: "true",
-        headerStyle: { width: "2%" }
+        headerStyle: { width: "3%" }
       },
       {
         dataField: "nombre",
@@ -240,8 +240,7 @@ class HorarioUbicacion extends Component {
         <Container className="App">
           <h2>Horario Ubicacion</h2>
           <Form className="form">
-            <Col>
-              <Container className="App">
+            <Col>              
                 <Row>
                   <Col>
                     <Form.Group>
@@ -254,8 +253,7 @@ class HorarioUbicacion extends Component {
                       />
                     </Form.Group>
                   </Col>
-                </Row>
-              </Container>
+                </Row>              
             </Col>
             <Col>
               <Form.Group>

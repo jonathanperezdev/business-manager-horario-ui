@@ -253,10 +253,25 @@ class Festivos extends Component {
             <Col>
               <Container className="App">
                 <h5>Festivo</h5>
-                <Row>
+                <Row>                  
+                  <Col sm="1">                  
+                      <Form.Label>Fecha</Form.Label>
+                  </Col>
                   <Col>
-                    <Form.Group>
-                      <Form.Label>Año</Form.Label>
+                  <Datetime
+                          dateFormat={DATE_FORMAT}
+                          timeFormat={false}
+                          onChange={this.handleDate} />
+                        {messageFestivo }
+                  </Col>
+                </Row>
+              </Container>
+            </Col>
+            <Col>
+              <Container className="App">                
+                <Row>                  
+                  <Col><h5>Festivos</h5></Col>                  
+                  <Col sm="2">                  
                       <Form.Control
                         as="select"
                         onChange={(e) => {
@@ -265,25 +280,9 @@ class Festivos extends Component {
                         value={fields.ano}>
                         <option value='null'>Seleccionar</option>
                         {optionAnos }
-                      </Form.Control>
-                    </Form.Group>
+                      </Form.Control>                  
                   </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Fecha</Form.Label>
-                        <Datetime
-                          dateFormat={DATE_FORMAT}
-                          timeFormat={false}
-                          onChange={this.handleDate} />
-                        {messageFestivo }
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Container>
-            </Col>
-            <Col>
-              <Container className="App">
-                <h5>Festivos</h5>
+                  </Row>                
                   <Row>
                     <Col>
                       <Form.Group>

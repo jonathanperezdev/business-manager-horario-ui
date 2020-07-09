@@ -30,7 +30,7 @@ class HorarioDiaComponent extends Component {
             <Label>Hora Inicio</Label>
             <Row>
               <Col>
-                <Input type="text"
+                <Input
                   disabled
                   value={fechaInicio}/>
               </Col>
@@ -53,7 +53,7 @@ class HorarioDiaComponent extends Component {
             <Label>Hora Fin</Label>
               <Row>
                 <Col>
-                  <Input type="text"
+                  <Input
                     disabled
                     value={fechaFin}/>
                 </Col>
@@ -73,13 +73,13 @@ class HorarioDiaComponent extends Component {
         </Col>
         <Col sm="1">
           <Label>Horas</Label>
-          <Input type="text"
+          <Input
             disabled
             value={diaHorario ? diaHorario.horas : 0}/>
         </Col>
         <Col>
           <Label>Recargos</Label>
-          <Input type="text"
+          <Input
             disabled
             value={diaHorario ? diaHorario.deatelleHoras : ''}/>
         </Col>
