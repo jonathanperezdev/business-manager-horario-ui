@@ -5,7 +5,7 @@ import {
   Form,
   Button,
   Alert,
-  Modal,  
+  Modal,
   Row,
 } from "react-bootstrap";
 import BootstrapTable from "react-bootstrap-table-next";
@@ -22,7 +22,8 @@ import Moment from "moment";
 import Loading from "common/Loading";
 
 const options = Constant.OPTIONS_TABLE;
-const PATH_PERIODO_PAGO_SERVICE = Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
+const PATH_PERIODO_PAGO_SERVICE =
+  Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
 const PATH_PERIODO_PAGO_YEARS_SERVICE = PATH_PERIODO_PAGO_SERVICE + "/years/";
 const DATE_FORMAT = Constant.DATE_FORMAT;
 
@@ -63,41 +64,45 @@ class PeriodoPago extends Component {
   }
 
   componentDidMount() {
+    this.loadAnosCombo();
+  }
+
+  loadPeriodosPago = (ano) => {
+    if (ano == "select") {
+      this.setState({ periodosPago: [] });
+    } else {
+      axios
+        .get(PATH_PERIODO_PAGO_YEARS_SERVICE + ano)
+        .then((result) => {
+          if (result.data.length == 0) {
+            this.setState({ isLoading: false });
+          } else {
+            this.setState({
+              periodosPago: result.data,
+              isLoading: false,
+              rowId: result.data[0].id,              
+            });
+          }
+        })
+        .catch((error) =>
+          this.setState({
+            error,
+            formState: "error",
+            isLoading: false,
+            modal: false,
+          })
+        );
+    }
+  };
+
+  loadAnosCombo = () => {
     axios
       .get(PATH_PERIODO_PAGO_YEARS_SERVICE)
       .then((result) => {
         let anos = result.data;
         this.setState({
-          anos: anos,
-          ano:
-            anos.length == 0 ? Moment().format("YYYY") : anos[anos.length - 1],
-          formState: "",
+          anos: anos          
         });
-      })
-      .catch((error) =>
-        this.setState({
-          error,
-          formState: "error",
-          isLoading: false,
-          modal: false,
-        })
-      );
-  }
-
-  loadPeriodosPago = (ano) => {
-    axios
-      .get(PATH_PERIODO_PAGO_YEARS_SERVICE + ano)
-      .then((result) => {
-        if (!result.data.length == 0) {
-          this.setState({ isLoading: false });
-        } else {
-          this.setState({
-            periodosPago: result.data,
-            isLoading: false,
-            rowId: result.data[0].id,
-            formState: "",
-          });
-        }
       })
       .catch((error) =>
         this.setState({
@@ -113,7 +118,7 @@ class PeriodoPago extends Component {
     this.setState({ rowId: row["id"] });
   };
 
-  remove = async (id) => {
+  remove = async (id) => {    
     await axios({
       method: "DELETE",
       url: PATH_PERIODO_PAGO_SERVICE + `/${id}`,
@@ -121,18 +126,18 @@ class PeriodoPago extends Component {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-    })
-      .then(() => {
-        let updatedPeriodosPago = [...this.state.periodosPago].filter(
-          (i) => i.id != id
-        );
+    }).then(() => {
+        let {fields} = this.state;
 
-        this.setState({
-          periodosPago: updatedPeriodosPago,
+        fields.ano = 'select';
+        this.loadPeriodosPago(fields.ano);
+        this.loadAnosCombo();
+
+        this.setState({          
           formState: "deleted",
           modal: false,
           rowId: 0,
-          formState: "",
+          fields: fields          
         });
       })
       .catch((error) =>
@@ -157,14 +162,10 @@ class PeriodoPago extends Component {
       data: JSON.stringify(fields),
     })
       .then((result) => {
-        let { periodosPago, anos } = this.state;
-        periodosPago.push(result.data);
-        this.setState({
-          formState: "success",
-          modal: false,
-          periodosPago: periodosPago,
-          anos: this.addYear(result.data.fechaInicio, anos),
-        });
+        fields.ano = Moment(fields.fechaInicio).format("YYYY");
+        this.loadPeriodosPago(fields.ano);
+        this.loadAnosCombo();
+        this.setState(fields);
       })
       .catch((error) =>
         this.setState({
@@ -229,16 +230,14 @@ class PeriodoPago extends Component {
         ) + 1;
     }
     this.setState({ fields });
-  };  
+  };
 
   handleChange = (value, field) => {
-    let {fields} = this.state;
-    
+    let { fields } = this.state;
+
     fields[field] = value;
 
-    if (value != "select") {
-      this.loadPeriodosPago(value);
-    }
+    this.loadPeriodosPago(value);
     this.setState({ fields });
   };
 
@@ -255,19 +254,38 @@ class PeriodoPago extends Component {
   };
 
   render() {
-    const {periodosPago, isLoading, error, errors, formState, anos, rowId, fields} = this.state;
+    const {
+      periodosPago,
+      isLoading,
+      error,
+      errors,
+      formState,
+      anos,
+      rowId,
+      fields,
+    } = this.state;
 
     if (isLoading) {
-      return  <Loading/>
+      return <Loading />;
     }
 
     let messageLabel;
-    if (formState == 'error') {
-      messageLabel = <Alert variant="danger">{error.response.data.message}</Alert>;
-    }else if(formState == 'success'){
-      messageLabel = <Alert variant="success">El periodo de pago se creo satisfactoriamente {fields.nombre}</Alert>;
+    if (formState == "error") {
+      messageLabel = (
+        <Alert variant="danger">{error.response.data.message}</Alert>
+      );
+    } else if (formState == "success") {
+      messageLabel = (
+        <Alert variant="success">
+          El periodo de pago se creo satisfactoriamente {fields.nombre}
+        </Alert>
+      );
     } else if (formState == "deleted") {
-      messageLabel = (<Alert variant="success">El periodo de pago se elimino satisfactoriamente</Alert>);
+      messageLabel = (
+        <Alert variant="success">
+          El periodo de pago se elimino satisfactoriamente
+        </Alert>
+      );
     }
 
     let messageFechaInicio;
@@ -282,7 +300,7 @@ class PeriodoPago extends Component {
       messageFechaFin = (
         <Alert variant="danger">{this.state.errors.fechaFin}</Alert>
       );
-    }    
+    }
 
     const columns = [
       {
@@ -321,11 +339,18 @@ class PeriodoPago extends Component {
     ));
 
     const modal = (
-      <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
+      <Modal
+        show={this.state.modal}
+        onClick={this.toggle}
+        className={this.props.className}
+      >
         <Modal.Header onClick={this.toggle}>Confirmar Eliminar</Modal.Header>
         <Modal.Body>Esta seguro de eliminar el periodo de pago</Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-primary" onClick={(rowid) => this.remove(rowId)}>
+          <Button
+            variant="outline-primary"
+            onClick={(rowid) => this.remove(rowId)}
+          >
             Eliminar
           </Button>{" "}
           <Button variant="outline-secondary" onClick={this.toggle}>
@@ -343,11 +368,11 @@ class PeriodoPago extends Component {
           <Form className="form">
             <Col>
               <Container className="App">
-                <h5>Periodo</h5>                
+                <h5>Periodo</h5>
                 <Row>
                   <Col>
                     <Form.Group>
-                      <Form.Label for="fecha">Fecha Inicio</Form.Label>
+                      <Form.Label>Fecha Inicio</Form.Label>
                       <Datetime
                         dateFormat={DATE_FORMAT}
                         timeFormat={false}
@@ -361,7 +386,7 @@ class PeriodoPago extends Component {
                   </Col>
                   <Col>
                     <Form.Group>
-                      <Form.Label for="fecha">Fecha Fin</Form.Label>
+                      <Form.Label>Fecha Fin</Form.Label>
                       <Datetime
                         dateFormat={DATE_FORMAT}
                         timeFormat={false}
@@ -375,8 +400,8 @@ class PeriodoPago extends Component {
                   </Col>
                   <Col sm="2">
                     <Form.Group>
-                      <Form.Label for="fecha">Dias a Liquidar</Form.Label>
-                      <Form.Control                        
+                      <Form.Label>Dias a Liquidar</Form.Label>
+                      <Form.Control
                         disabled
                         value={this.state.fields.diasLiquidados}
                       />
@@ -388,19 +413,22 @@ class PeriodoPago extends Component {
             <Col>
               <Container className="App">
                 <Row>
-                  <Col><h5>Periodos de Pago</h5></Col>
+                  <Col>
+                    <h5>Periodos de Pago</h5>
+                  </Col>
                   <Col sm="2">
-                    <Form.Control 
+                    <Form.Control
                       as="select"
                       onChange={(e) => {
                         this.handleChange(e.target.value, "ano");
-                      }}                      
-                      value={this.state.fields.ano}>
-                        <option value="select">Seleccionar</option>
-                        {optionAnos}
-                      </Form.Control>
+                      }}
+                      value={this.state.fields.ano}
+                    >
+                      <option value="select">Seleccionar</option>
+                      {optionAnos}
+                    </Form.Control>
                   </Col>
-                </Row>                
+                </Row>
                 <Row>
                   <Col>
                     <Form.Group>
@@ -420,7 +448,7 @@ class PeriodoPago extends Component {
               <Form.Group>
                 <Button variant="outline-primary" onClick={this.validateRequired}>Crear</Button>{"    "}
                 <Button variant="outline-secondary" onClick={() => this.newPeriodoPago()}>Nuevo</Button>{"    "}
-                <Button variant="outline-primary" onClick={(rowId) => this.detalle(this.state.rowId)}>Detalle</Button>{"    "}
+                <Button variant="outline-primary" disabled={rowId == 0} onClick={(rowId) => this.detalle(this.state.rowId)}>Detalle</Button>{"    "}
                 <Button variant="outline-primary" disabled={rowId == 0} onClick={this.toggle}>Eliminar</Button>
               </Form.Group>
             </Col>
