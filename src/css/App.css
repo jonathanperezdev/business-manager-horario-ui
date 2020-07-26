@@ -9,6 +9,7 @@
   margin-right: auto;
   width: 1200px;
   margin-top: 100px;
+  font-size: small;
 }
 
 .welcome {
@@ -42,6 +43,8 @@ textarea{
 
 .App-title {
   font-size: 1.5em;
+  text-align: center;
+  margin: 0  
 }
 
 .App-intro {

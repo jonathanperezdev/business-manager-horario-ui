@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Container, Col, FormGroup, Label, Input, Row} from 'reactstrap';
+import { Form, Col, Row, Toast, Button, ListGroup, ListGroupItem} from 'react-bootstrap';
 import Constant from "common/Constant";
 import Datetime from "react-datetime";
 import Moment from 'moment';
@@ -8,10 +8,23 @@ const TIME_FORMAT = Constant.TIME_FORMAT;
 const DATE_FORMAT = Constant.DATE_FORMAT;
 
 class HorarioDiaComponent extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {showRecargos: false};
+  }  
+
+  toggle = () => {
+    this.setState({
+      showRecargos: !this.state.showRecargos,
+    });
+  };
+
   render() {
     let {handleTime, dia, fields} = this.props;
+    const {showRecargos} = this.state;
 
-    let diaHorario = fields.horarioSemana ? fields.horarioSemana[dia] : null;
+    let diaHorario = fields[dia];
 
     let fechaInicio = diaHorario ? Moment(diaHorario.fechaInicio).format(DATE_FORMAT) : '';
     let horaInicio = diaHorario ? Moment(diaHorario.fechaInicio).format(TIME_FORMAT) : null;
@@ -19,18 +32,29 @@ class HorarioDiaComponent extends Component {
     let fechaFin = diaHorario ? Moment(diaHorario.fechaFin).format(DATE_FORMAT) : '';
     let horaFin = diaHorario ? Moment(diaHorario.fechaFin).format(TIME_FORMAT) : null;
 
-    return (
+    let toastRecargos = '';
+    if(diaHorario) {
+      toastRecargos = (
+        <Toast show={showRecargos} onClose={this.toggle}>
+          <ListGroup variant="flush">
+            {diaHorario.detalleRecargos.map((detalle) => (
+              <ListGroup.Item size='sm'><small>{detalle}</small></ListGroup.Item>        
+            ))}            
+        </ListGroup>        
+      </Toast>
+      );   
+    }
+
+    return (      
       <Row>
-        <Col sm="2">
-          <h5>&nbsp;</h5>
+        <Col xs={2}>          
           <h5>{dia.charAt(0).toUpperCase() + dia.slice(1)}</h5>
         </Col>
-        <Col sm="3">
-          <FormGroup>
-            <Label>Hora Inicio</Label>
+        <Col xs={3}>
+          <Form.Group>            
             <Row>
               <Col>
-                <Input
+                <Form.Control
                   disabled
                   value={fechaInicio}/>
               </Col>
@@ -39,21 +63,20 @@ class HorarioDiaComponent extends Component {
                   dateFormat={false}
                   timeFormat={TIME_FORMAT}
                   inputProps={{readOnly:true, disabled: !horaInicio}}
-                  value={horaInicio}
+                  value={horaInicio}                  
                   onChange={e => {
                     handleTime(e, dia, "fechaInicio");
                   }}
                   />
               </Col>
             </Row>
-          </FormGroup>
+          </Form.Group>
         </Col>
-        <Col sm="3">
-          <FormGroup>
-            <Label>Hora Fin</Label>
+        <Col xs={3}>
+          <Form.Group>            
               <Row>
                 <Col>
-                  <Input
+                  <Form.Control
                     disabled
                     value={fechaFin}/>
                 </Col>
@@ -62,27 +85,24 @@ class HorarioDiaComponent extends Component {
                     dateFormat={false}
                     timeFormat={TIME_FORMAT}
                     inputProps={{readOnly:true, disabled: !horaFin}}
-                    value={horaFin}
+                    value={horaFin}                    
                     onChange={e => {
                       handleTime(e, dia, "fechaFin");
                     }}
                     />
                 </Col>
               </Row>
-          </FormGroup>
+          </Form.Group>
         </Col>
-        <Col sm="1">
-          <Label>Horas</Label>
-          <Input
+        <Col xs={1}>          
+          <Form.Control
             disabled
             value={diaHorario ? diaHorario.horas : 0}/>
         </Col>
-        <Col>
-          <Label>Recargos</Label>
-          <Input
-            disabled
-            value={diaHorario ? diaHorario.deatelleHoras : ''}/>
-        </Col>
+        <Col xs={3}>
+          <Button  variant="outline-primary" onClick={this.toggle}>Mostrar Recargos</Button>
+          {toastRecargos}
+        </Col>        
       </Row>
     );
   }

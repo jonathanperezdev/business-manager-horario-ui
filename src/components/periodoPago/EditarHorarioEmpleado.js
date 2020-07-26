@@ -1,63 +1,70 @@
-import React, { Component } from 'react';
-import { Container, Col, Form, Button, Alert, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input, Row} from 'reactstrap';
-import AppNavbar from 'menu/AppNavbar';
-import 'css/App.css';
-import Constant from 'common/Constant';
-import axios from 'axios';
-import {validateRequired} from 'common/Validator';
+import React, { Component } from "react";
+import {
+  Container,
+  Col,
+  Form,
+  Button,
+  Alert,
+  Modal,
+  Row,
+} from "react-bootstrap";
+import AppNavbar from "menu/AppNavbar";
+import "css/App.css";
+import Constant from "common/Constant";
+import axios from "axios";
 import Datetime from "react-datetime";
-import 'css/react-datetime.css';
-import HorarioDiaComponent from 'common/HorarioDiaComponent';
-import Moment from 'moment';
-import Loading from 'common/Loading';
+import "css/react-datetime.css";
+import HorarioDiaComponent from "common/HorarioDiaComponent";
+import Moment from "moment";
+import Loading from "common/Loading";
 
 const TIME_FORMAT = Constant.TIME_FORMAT;
 const DATE_FORMAT = Constant.DATE_FORMAT;
 const DATE_TIME_FORMAT = Constant.DATE_TIME_FORMAT;
-const PATH_PERIODO_PAGO_SERVICE = Constant.HORARIO_API+Constant.PERIODO_PAGO_SERVICE;
-const PATH_DIAS_SERVICE = PATH_PERIODO_PAGO_SERVICE+'semana/dias';
+const PATH_PERIODO_PAGO_SERVICE =
+  Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
+const PATH_DIAS_SERVICE = PATH_PERIODO_PAGO_SERVICE + "semana/dias";
 
 class EditarHorarioEmpleado extends Component {
-
   constructor(props) {
     super(props);
 
     this.state = {
       isLoading: true,
       errors: {},
-      fields: {},
-      formState: '',
-      modal: false
+      horarioEmpleado: {},
+      formState: "",
+      modal: false,
     };
   }
 
   componentDidMount() {
-    this.setState({isLoading: true});
+    this.setState({ isLoading: true });
 
-    let {params} = this.props.match;
-    this.loadHorarioEmpleado(PATH_PERIODO_PAGO_SERVICE+params.idEmpleado+'/'+params.idUbicacion+'/'+params.idSemana);
+    let { params } = this.props.match;
+    this.loadHorarioEmpleado(
+      PATH_PERIODO_PAGO_SERVICE +'/semana/'+params.idSemana+'/horarioEmpleado/'+params.idEmpleado
+    );
   }
 
   loadHorarioEmpleado = (pathService) => {
-    axios.get(pathService)
-      .then(result => {
-        let fields = this.state;
-        fields.horarioSemana = result.data.horarioSemana;
-
-        this.setState({ fields: result.data, isLoading: false});
+    axios
+      .get(pathService)
+      .then((result) => {        
+        this.setState({ horarioEmpleado: result.data, isLoading: false });
       })
-      .catch(error =>
+      .catch((error) =>
         this.setState({
           error,
           formState: "error",
           isLoading: false,
-          modal: false
+          modal: false,
         })
       );
-  }
+  };
 
   save = async () => {
-    let {fields} = this.state;
+    let { horarioEmpleado } = this.state;
 
     this.setState({ isLoading: true });
 
@@ -66,138 +73,188 @@ class EditarHorarioEmpleado extends Component {
       url: PATH_DIAS_SERVICE,
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      data: JSON.stringify(fields)
-    }).then(result => {
-      let {fields} = this.state;
-      fields.horarioSemana = result.data.horarioSemana;
-      this.setState({ isLoading: false, formState: 'success', fields: fields, modal:false});
-    }).catch(error =>
-      this.setState({
-        error,
-        formState: "error",
-        isLoading: false
+      data: JSON.stringify(horarioEmpleado),
+    }).then((result) => {                
+        this.setState({
+          isLoading: false,
+          formState: "success",
+          horarioEmpleado: result.data,
+          modal: false,
+        });
+    }).catch((error) =>
+        this.setState({
+          error,
+          formState: "error",
+          isLoading: false,
       })
     );
   };
 
   toggle = () => {
     this.setState({
-      modal: !this.state.modal
+      modal: !this.state.modal,
     });
-  }
+  };
 
   handleTime = (date, dia, field) => {
-    let {fields } = this.state;
-    let diaSemana = fields.horarioSemana[dia];
-    diaSemana.modified = true;
-
+    let { horarioEmpleado } = this.state;
+    let diaSemana = horarioEmpleado[dia];
+    
     let fecha = Moment(diaSemana[field]).format(DATE_FORMAT);
     let hora = Moment(date).format(TIME_FORMAT);
-    diaSemana[field] = fecha+'T'+hora;
+    diaSemana[field] = fecha + "T" + hora;
 
-    this.setState({ fields });
+    let fechaInicio = Moment(diaSemana.fechaInicio);
+    let fechaFin = Moment(diaSemana.fechaFin);
+    diaSemana.horas = Moment.duration(fechaFin.diff(fechaInicio)).asHours();
+
+    this.setState({ horarioEmpleado });
   };
 
   render() {
-    const {festivos, isLoading, error, isExistData, errors, formState, anos, fields } = this.state;
-
-    let messageError;
-    if (formState == 'error') {
-      messageError = <Alert variant="danger">{error.response.data.message}</Alert>;
-    }else if(formState == 'success'){
-      messageError = <Alert variant="success">El Horario del empleado se guardo satisfactoriamente</Alert>;
-    }
+    const {      
+      isLoading,
+      error,      
+      formState,      
+      horarioEmpleado,
+    } = this.state;
 
     if (isLoading) {
-      return  <Loading/>
+      return <Loading />;
     }
 
-    const modal = <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
-                    <ModalHeader onClick={this.toggle}>Confirmar Guardar Horario Empleado</ModalHeader>
-                      <ModalBody>
-                        Esta seguro de guardar el horario para el empleado
-                      </ModalBody>
-                      <ModalFooter>
-                        <Button variant="outline-primary" onClick={this.save}>Guardar</Button>{' '}
-                        <Button variant="outline-secondary" onClick={this.toggle}>Cancelar</Button>
-                      </ModalFooter>
-                    </Modal>;
+    let messageLabel;
+    if (formState == "error") {
+      messageLabel = (<Alert variant="danger">{error.response.data.message}</Alert>);
+    } else if (formState == "success") {
+      messageLabel = (<Alert variant="success">El Horario del empleado se guardo satisfactoriamente</Alert>);
+    }    
+
+    const modal = (
+      <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>        
+      <Modal.Header onClick={this.toggle}>Confirmar Guardar Horario Empleado</Modal.Header>
+        <Modal.Body>
+          Esta seguro de guardar el horario para el empleado
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-primary" onClick={this.save}>
+            Guardar
+          </Button>{" "}
+          <Button variant="outline-secondary" onClick={this.toggle}>
+            Cancelar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
 
     return (
       <div>
-        {modal }
-        <AppNavbar/>
+        {modal}
+        <AppNavbar />
         <Container className="App">
-          <h2>Editar Horario Empleado</h2>
+          <h2 className='App-title'>Editar Horario Empleado</h2>
           <Form className="form">
             <Col>
               <Container className="App">
                 <h5>Empleado</h5>
-                  <Row>
-                    <Col sm="2">
-                      <FormGroup>
-                        <Label>Id</Label>
-                        <Input
-                          disabled
-                          value={fields.empleado.id}/>
-                      </FormGroup>
-                    </Col>
-                    <Col>
-                      <FormGroup>
-                        <Label>Nombres</Label>
-                        <Input
-                          disabled
-                          value={fields.empleado.nombres}/>
-                      </FormGroup>
-                    </Col>
-                    <Col>
-                      <Form.Group>
-                        <Label>Apellidos</Label>
-                        <Form.Control
-                          disabled
-                          value={fields.empleado.apellidos}/>
-                      </Form.Group>
-                    </Col>
-                  </Row>
+                <Row>
+                 <Col sm="2">
+                    <Form.Control readOnly placeholder={horarioEmpleado.empleado.id} />                    
+                  </Col>
+                  <Col sm="4">
+                    <Form.Control readOnly placeholder={horarioEmpleado.empleado.nombres +' '+ horarioEmpleado.empleado.apellidos} />                    
+                  </Col>                  
+                </Row>
               </Container>
             </Col>
             <Col>
               <Container className="App">
-                <h5>Horario Semana</h5>
+                <Row>
+                  <Col>
+                    <h5>Horario Semana</h5>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col xs={2}></Col>
+                  <Col xs={3}><h5>Hora Inicio</h5></Col>                  
+                  <Col xs={3}><h5>Hora Fin</h5></Col>                  
+                  <Col xs={1}><h5>Horas</h5></Col>
+                  <Col xs={3}><h5>Recargos</h5></Col>
+                </Row>                
+                <Row>
+                  <Col>
+                    <HorarioDiaComponent
+                      handleTime={this.handleTime}
+                      dia="lunes"
+                      fields={this.state.horarioEmpleado}
+                    />
+                  </Col>
+                </Row>
+                <Row>                
+                  <Col>
+                    <HorarioDiaComponent
+                      handleTime={this.handleTime}
+                      dia="martes"
+                      fields={this.state.horarioEmpleado}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <HorarioDiaComponent
+                      handleTime={this.handleTime}
+                      dia="miercoles"
+                      fields={this.state.horarioEmpleado}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <HorarioDiaComponent
+                      handleTime={this.handleTime}
+                      dia="jueves"
+                      fields={this.state.horarioEmpleado}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <HorarioDiaComponent
+                      handleTime={this.handleTime}
+                      dia="viernes"
+                      fields={this.state.horarioEmpleado}
+                    />
+                  </Col>
+                </Row>
+                <Row>
                 <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='lunes' fields={this.state.fields}/>
+                  <HorarioDiaComponent
+                    handleTime={this.handleTime}
+                    dia="sabado"
+                    fields={this.state.horarioEmpleado}
+                  />
                 </Col>
+                </Row>
+                <Row>
                 <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='martes' fields={this.state.fields}/>
+                  <HorarioDiaComponent
+                    handleTime={this.handleTime}
+                    dia="domingo"
+                    fields={this.state.horarioEmpleado}
+                  />
                 </Col>
-                <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='miercoles' fields={this.state.fields}/>
-                </Col>
-                <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='jueves' fields={this.state.fields}/>
-                </Col>
-                <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='viernes' fields={this.state.fields}/>
-                </Col>
-                <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='sabado' fields={this.state.fields}/>
-                </Col>
-                <Col>
-                  <HorarioDiaComponent handleTime={this.handleTime} dia='domingo' fields={this.state.fields}/>
-                </Col>
+                </Row>
               </Container>
             </Col>
             <Col>
-            <FormGroup>
-              <Button variant="outline-primary" onClick={this.toggle}>Guardar</Button>{'    '}
-              </FormGroup>
+              <Form.Group>
+                <Button variant="outline-primary" onClick={this.toggle}>Guardar</Button>
+              </Form.Group>
             </Col>
-            <Col>
-             {messageError }
-            </Col>
-          </Form >
+            <Col>{messageLabel}</Col>
+          </Form>
         </Container>
       </div>
     );

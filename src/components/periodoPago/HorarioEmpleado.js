@@ -20,13 +20,18 @@ import { validateRequired } from "common/Validator";
 import { Link, withRouter } from "react-router-dom";
 import Loading from "common/Loading";
 
+function horasFormatter(cell: any) {
+  if (!cell) {
+    return "0 horas";
+  }
+  return cell + " horas";
+}
+
 const options = Constant.OPTIONS_TABLE;
 
 const PATH_UBICACIONES_SERVICE = Constant.HORARIO_API + "/ubicacion/all";
 const PATH_PERIODO_PAGO_SERVICE =
   Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
-const PATH_PERIODO_PAGO_SEMANAS_SERVICE =
-  PATH_PERIODO_PAGO_SERVICE + "/semanas/";
 
 class HorarioEmpleado extends Component {
   constructor(props) {
@@ -35,9 +40,8 @@ class HorarioEmpleado extends Component {
     this.state = {
       isLoading: true,
       horarioEmpleado: [],
-      consultParams: {},
+      consultParams: { ubicacion: "all" },
       ubicaciones: [],
-      semanas: [],
       periodoPago: { fechaInicio: "", fechaFin: "" },
       modal: false,
       errors: {},
@@ -51,7 +55,7 @@ class HorarioEmpleado extends Component {
       .then((result) => {
         this.setState({
           ubicaciones: result.data,
-          isLoading: false,          
+          isLoading: false,
         });
       })
       .catch((error) =>
@@ -62,7 +66,21 @@ class HorarioEmpleado extends Component {
         })
       );
 
-    
+    axios
+      .get(PATH_PERIODO_PAGO_SERVICE + this.props.match.params.id)
+      .then((result) => {
+        this.setState({
+          periodoPago: result.data,
+          isLoading: false,
+        });
+      })
+      .catch((error) =>
+        this.setState({
+          error,
+          isLoading: false,
+          formState: "error",
+        })
+      );
   }
 
   edit = (idEmpleado, idUbicacion, idSemana) => {
@@ -73,13 +91,15 @@ class HorarioEmpleado extends Component {
   consultar = async () => {
     let { consultParams } = this.state;
 
+    let horarioEmpleadoPath =
+      PATH_PERIODO_PAGO_SERVICE + "semana/" + consultParams.semana;
+    if (consultParams.ubicacion != "all") {
+      horarioEmpleadoPath =
+        horarioEmpleadoPath + "/ubicacion/" + consultParams.ubicacion;
+    }
+
     axios
-      .get(
-        PATH_PERIODO_PAGO_SERVICE +
-          consultParams.ubicacion +
-          "/" +
-          consultParams.semana
-      )
+      .get(horarioEmpleadoPath + "/horarioEmpleado")
       .then((result) => {
         this.setState({
           horarioEmpleado: result.data,
@@ -91,6 +111,7 @@ class HorarioEmpleado extends Component {
       .catch((error) =>
         this.setState({
           error,
+          horarioEmpleado: [],
           isLoading: false,
           formState: "error",
         })
@@ -109,41 +130,36 @@ class HorarioEmpleado extends Component {
 
   handleChange = (valor, field) => {
     let { consultParams } = this.state;
-    consultParams[field] = valor;
+    consultParams[field] = valor;    
+
     this.setState(consultParams);
-    this.validateRequired();
+    if (this.handleValidation()) {
+      this.consultar();
+    }
   };
 
   handleValidation() {
     let { consultParams } = this.state;
 
     let errors = {
-      ubicacion: validateRequired(consultParams.ubicacion, "ubicacion"),
       semana: validateRequired(consultParams.semana, "semana"),
     };
     let formState = "";
 
-    if (errors.ubicacion || errors.semana) {
+    if (errors.semana) {
       formState = "invalid";
     }
     this.setState({ errors: errors, formState: formState });
     return formState == !"invalid";
   }
 
-  validateRequired = () => {
-    if (this.handleValidation()) {
-      this.consultar();
-    }
-  };
-
   render() {
     const {
       horarioEmpleado,
       ubicaciones,
-      semanas,
+      periodoPago,
       formState,
       error,
-      ubicacion,
       errors,
       rowId,
       consultParams,
@@ -158,13 +174,6 @@ class HorarioEmpleado extends Component {
     if (formState == "error") {
       messageLabel = (
         <Alert variant="danger">{error.response.data.message}</Alert>
-      );
-    }
-
-    let messageUbicacion;
-    if (errors.ubicacion) {
-      messageUbicacion = (
-        <Alert variant="danger">{this.state.errors.ubicacion}</Alert>
       );
     }
 
@@ -184,11 +193,13 @@ class HorarioEmpleado extends Component {
       ));
     }
 
+    let semanas = periodoPago.semanas;
     let optionSemanas;
     if (semanas.length > 0) {
       optionSemanas = semanas.map((semana) => (
         <option key={semana.id} value={semana.id}>
-          Semana:{semana.id} [{semana.fechaInicio}] - [{semana.fechaFin}]
+          Semana:{semana.numeroSemana} [{semana.fechaInicio}] - [
+          {semana.fechaFin}]
         </option>
       ));
     }
@@ -209,32 +220,39 @@ class HorarioEmpleado extends Component {
         text: "Nombres",
       },
       {
-        dataField: "horarioSemana.lunes.fechas",
+        dataField: "lunes.horas",
         text: "Lunes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.martes.fechas",
+        dataField: "martes.horas",
         text: "Martes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.miercoles.fechas",
+        dataField: "miercoles.horas",
         text: "Miercoles",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.jueves.fechas",
+        dataField: "jueves.horas",
         text: "Jueves",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.viernes.fechas",
+        dataField: "viernes.horas",
         text: "Viernes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.sabado.fechas",
+        dataField: "sabado.horas",
         text: "Sabado",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.domingo.fechas",
+        dataField: "domingo.horas",
         text: "Domingo",
+        formatter: horasFormatter,
       },
     ];
 
@@ -246,28 +264,44 @@ class HorarioEmpleado extends Component {
       onSelect: this.onRowSelect,
     };
 
-    let tableHorario;
-    if (horarioEmpleado.length > 0) {
-      tableHorario = (
-        <Col>
-          <Container className="App">
-            <Row>
-              <Col>
-                <Form.Group>
-                  <BootstrapTable
-                    keyField="empleado.id"
-                    data={horarioEmpleado}
-                    columns={columns}
-                    selectRow={selectRow}
-                    pagination={paginationFactory(options)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </Container>
-        </Col>
-      );
-    }   
+    let tableHorario = (
+      <Col>
+        <Container className="App">
+          <Row>
+            <Col>
+              <h5>Horario</h5>
+            </Col>
+            <Col sm="2">
+              <Form-Group>
+                <Form.Control
+                  as="select"
+                  value={this.state.consultParams.ubicacion}
+                  onChange={(e) => {
+                    this.handleChange(e.target.value, "ubicacion");
+                  }}
+                >
+                  <option value="all">Ubicaciones</option>
+                  {optionUbicaciones}
+                </Form.Control>
+              </Form-Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group>
+                <BootstrapTable
+                  keyField="empleado.id"
+                  data={horarioEmpleado}
+                  columns={columns}
+                  selectRow={selectRow}
+                  pagination={paginationFactory(options)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+        </Container>
+      </Col>
+    );
 
     const modal = (
       <Modal
@@ -320,22 +354,6 @@ class HorarioEmpleado extends Component {
                         disabled
                         value={this.state.periodoPago.fechaFin}
                       />
-                    </Form-Group>
-                  </Col>
-                  <Col sm="2">
-                    <Form-Group>
-                      <Form.Label>Ubicacion</Form.Label>
-                      <Form.Control
-                        as="select"
-                        value={this.state.consultParams.ubicacion}
-                        onChange={(e) => {
-                          this.handleChange(e.target.value, "ubicacion");
-                        }}
-                      >
-                        <option value="">Seleccionar</option>
-                        {optionUbicaciones}
-                      </Form.Control>
-                      {messageUbicacion}
                     </Form-Group>
                   </Col>
                   <Col>
