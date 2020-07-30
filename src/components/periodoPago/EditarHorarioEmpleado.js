@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import {
   Container,
   Col,
@@ -20,10 +21,8 @@ import Loading from "common/Loading";
 
 const TIME_FORMAT = Constant.TIME_FORMAT;
 const DATE_FORMAT = Constant.DATE_FORMAT;
-const DATE_TIME_FORMAT = Constant.DATE_TIME_FORMAT;
-const PATH_PERIODO_PAGO_SERVICE =
-  Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
-const PATH_DIAS_SERVICE = PATH_PERIODO_PAGO_SERVICE + "semana/dias";
+const PATH_HORARIO_EMPLEADO_SERVICE =
+  Constant.HORARIO_API + Constant.HORARIO_EMPLEADO_SERVICE;
 
 class EditarHorarioEmpleado extends Component {
   constructor(props) {
@@ -36,14 +35,14 @@ class EditarHorarioEmpleado extends Component {
       formState: "",
       modal: false,
     };
-  }
+  } 
 
   componentDidMount() {
     this.setState({ isLoading: true });
 
     let { params } = this.props.match;
     this.loadHorarioEmpleado(
-      PATH_PERIODO_PAGO_SERVICE +'/semana/'+params.idSemana+'/horarioEmpleado/'+params.idEmpleado
+      PATH_HORARIO_EMPLEADO_SERVICE+params.idEmpleado+'/semana/'+params.idSemana
     );
   }
 
@@ -65,12 +64,13 @@ class EditarHorarioEmpleado extends Component {
 
   save = async () => {
     let { horarioEmpleado } = this.state;
+    let { params } = this.props.match;
 
     this.setState({ isLoading: true });
-
+    alert(PATH_HORARIO_EMPLEADO_SERVICE+'/'+params.idEmpleado+'/semana/'+params.idSemana)
     await axios({
-      method: "POST",
-      url: PATH_DIAS_SERVICE,
+      method: "PUT",
+      url: PATH_HORARIO_EMPLEADO_SERVICE+params.idEmpleado+'/semana/'+params.idSemana,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -113,13 +113,20 @@ class EditarHorarioEmpleado extends Component {
     this.setState({ horarioEmpleado });
   };
 
+  regresar = (idPeriodoPago) => {
+    let path = `/horarioEmpleado/${idPeriodoPago}`;
+    this.props.history.push(path);
+  };
+
   render() {
     const {      
       isLoading,
       error,      
       formState,      
       horarioEmpleado,
-    } = this.state;
+    } = this.state;    
+
+    let { params } = this.props.match;
 
     if (isLoading) {
       return <Loading />;
@@ -250,7 +257,8 @@ class EditarHorarioEmpleado extends Component {
             </Col>
             <Col>
               <Form.Group>
-                <Button variant="outline-primary" onClick={this.toggle}>Guardar</Button>
+                <Button variant="outline-primary" onClick={this.toggle}>Guardar</Button>{"    "}
+                <Button variant="outline-primary" onClick={(idPeriodoPago) => this.regresar(params.idPeriodoPago)}>Regresar</Button>{"    "}
               </Form.Group>
             </Col>
             <Col>{messageLabel}</Col>
@@ -261,4 +269,4 @@ class EditarHorarioEmpleado extends Component {
   }
 }
 
-export default EditarHorarioEmpleado;
+export default withRouter(EditarHorarioEmpleado);

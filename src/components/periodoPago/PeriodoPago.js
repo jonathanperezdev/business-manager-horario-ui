@@ -20,6 +20,7 @@ import Datetime from "react-datetime";
 import "css/react-datetime.css";
 import Moment from "moment";
 import Loading from "common/Loading";
+import { withRouter } from "react-router-dom";
 
 const options = Constant.OPTIONS_TABLE;
 const PATH_PERIODO_PAGO_SERVICE =
@@ -187,8 +188,8 @@ class PeriodoPago extends Component {
     this.setState({ fields: fields });
   };
 
-  detalle = (id) => {
-    let path = `horarioEmpleado/${id}`;
+  detalle = (idPeriodoPago) => {
+    let path = `horarioEmpleado/${idPeriodoPago}`;
     this.props.history.push(path);
   };
 
@@ -460,4 +461,4 @@ class PeriodoPago extends Component {
   }
 }
 
-export default PeriodoPago;
+export default withRouter(PeriodoPago);

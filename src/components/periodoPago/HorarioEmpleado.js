@@ -17,8 +17,9 @@ import "css/react-datetime.css";
 import Constant from "common/Constant";
 import axios from "axios";
 import { validateRequired } from "common/Validator";
-import { Link, withRouter } from "react-router-dom";
+import { withRouter } from "react-router-dom";
 import Loading from "common/Loading";
+import { Link } from 'react-router-dom';
 
 function horasFormatter(cell: any) {
   if (!cell) {
@@ -32,6 +33,8 @@ const options = Constant.OPTIONS_TABLE;
 const PATH_UBICACIONES_SERVICE = Constant.HORARIO_API + "/ubicacion/all";
 const PATH_PERIODO_PAGO_SERVICE =
   Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
+const PATH_HORARIO_EMPLEADO_SERVICE =
+  Constant.HORARIO_API + Constant.HORARIO_EMPLEADO_SERVICE;
 
 class HorarioEmpleado extends Component {
   constructor(props) {
@@ -67,8 +70,8 @@ class HorarioEmpleado extends Component {
       );
 
     axios
-      .get(PATH_PERIODO_PAGO_SERVICE + this.props.match.params.id)
-      .then((result) => {
+      .get(PATH_PERIODO_PAGO_SERVICE + this.props.match.params.idPeriodoPago)
+      .then((result) => {        
         this.setState({
           periodoPago: result.data,
           isLoading: false,
@@ -83,8 +86,8 @@ class HorarioEmpleado extends Component {
       );
   }
 
-  edit = (idEmpleado, idUbicacion, idSemana) => {
-    let path = `/editarHorarioEmpleado/${idEmpleado}/${idUbicacion}/${idSemana}`;
+  edit = (idPeriodoPago, idEmpleado, idUbicacion, idSemana) => {    
+    let path = `/editarHorarioEmpleado/${idPeriodoPago}/${idEmpleado}/${idUbicacion}/${idSemana}`;
     this.props.history.push(path);
   };
 
@@ -92,14 +95,14 @@ class HorarioEmpleado extends Component {
     let { consultParams } = this.state;
 
     let horarioEmpleadoPath =
-      PATH_PERIODO_PAGO_SERVICE + "semana/" + consultParams.semana;
+      PATH_HORARIO_EMPLEADO_SERVICE + "all/semana/" + consultParams.semana;
     if (consultParams.ubicacion != "all") {
       horarioEmpleadoPath =
         horarioEmpleadoPath + "/ubicacion/" + consultParams.ubicacion;
     }
-
+    
     axios
-      .get(horarioEmpleadoPath + "/horarioEmpleado")
+      .get(horarioEmpleadoPath)
       .then((result) => {
         this.setState({
           horarioEmpleado: result.data,
@@ -164,7 +167,7 @@ class HorarioEmpleado extends Component {
       rowId,
       consultParams,
       isLoading,
-    } = this.state;
+    } = this.state;    
 
     if (isLoading) {
       return <Loading />;
@@ -195,7 +198,7 @@ class HorarioEmpleado extends Component {
 
     let semanas = periodoPago.semanas;
     let optionSemanas;
-    if (semanas.length > 0) {
+    if (semanas && semanas.length > 0) {
       optionSemanas = semanas.map((semana) => (
         <option key={semana.id} value={semana.id}>
           Semana:{semana.numeroSemana} [{semana.fechaInicio}] - [
@@ -378,10 +381,10 @@ class HorarioEmpleado extends Component {
             {tableHorario}
             <Col>
               <Form.Group>
-                <Button
-                  variant="outline-primary"
+                <Button  variant="outline-primary"
                   onClick={(idEmpleado, idUbicacion, idSemana) =>
                     this.edit(
+                      this.props.match.params.idPeriodoPago,
                       rowId,
                       consultParams.ubicacion,
                       consultParams.semana
@@ -389,11 +392,10 @@ class HorarioEmpleado extends Component {
                   }
                 >
                   Modificar
-                </Button>
-                {"    "}
-                <Button variant="outline-primary" onClick={this.toggle}>
-                  Eliminar
-                </Button>
+                </Button>{"    "}
+                <Button variant="outline-primary" onClick={this.toggle}>Eliminar</Button>{"    "}                
+                <Button variant="outline-secondary" onClick={this.regresar}>Eliminar</Button>{"    "}
+                <Button tag={Link} href='/PeriodoPago' variant="outline-secondary">Regresar</Button>
               </Form.Group>
             </Col>
             <Col>{messageLabel}</Col>
