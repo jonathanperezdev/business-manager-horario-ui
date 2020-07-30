@@ -6,14 +6,8 @@ import {
   Button,
   Alert,
   Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  FormGroup,
   Row,
-  Label,
-  Input
-} from "reactstrap";
+} from "react-bootstrap";
 import BootstrapTable from "react-bootstrap-table-next";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import AppNavbar from "menu/AppNavbar";
@@ -22,14 +16,25 @@ import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import "css/react-datetime.css";
 import Constant from "common/Constant";
 import axios from "axios";
-import {validateRequired} from 'common/Validator';
-import { Link, withRouter } from 'react-router-dom';
+import { validateRequired } from "common/Validator";
+import { withRouter } from "react-router-dom";
+import Loading from "common/Loading";
+import { Link } from 'react-router-dom';
+
+function horasFormatter(cell: any) {
+  if (!cell) {
+    return "0 horas";
+  }
+  return cell + " horas";
+}
 
 const options = Constant.OPTIONS_TABLE;
 
-const PATH_UBICACIONES_SERVICE = Constant.HORARIO_API + Constant.HORARIO_UBICACION_SERVICE + '/ubicaciones';
-const PATH_PERIODO_PAGO_SERVICE = Constant.HORARIO_API+Constant.PERIODO_PAGO_SERVICE;
-const PATH_PERIODO_PAGO_SEMANAS_SERVICE = PATH_PERIODO_PAGO_SERVICE+'/semanas/';
+const PATH_UBICACIONES_SERVICE = Constant.HORARIO_API + "/ubicacion/all";
+const PATH_PERIODO_PAGO_SERVICE =
+  Constant.HORARIO_API + Constant.PERIODO_PAGO_SERVICE;
+const PATH_HORARIO_EMPLEADO_SERVICE =
+  Constant.HORARIO_API + Constant.HORARIO_EMPLEADO_SERVICE;
 
 class HorarioEmpleado extends Component {
   constructor(props) {
@@ -38,155 +43,168 @@ class HorarioEmpleado extends Component {
     this.state = {
       isLoading: true,
       horarioEmpleado: [],
-      consultParams: {},
+      consultParams: { ubicacion: "all" },
       ubicaciones: [],
-      semanas: [],
-      periodoPago: {fechaInicio:'', fechaFin: ''},
+      periodoPago: { fechaInicio: "", fechaFin: "" },
       modal: false,
       errors: {},
-      rowId:0
+      rowId: 0,
     };
   }
 
   componentDidMount() {
-    axios.get(PATH_UBICACIONES_SERVICE)
-      .then(result => {
+    axios
+      .get(PATH_UBICACIONES_SERVICE)
+      .then((result) => {
         this.setState({
           ubicaciones: result.data,
           isLoading: false,
-          formState: "ok"
         });
-      }).catch(error =>
+      })
+      .catch((error) =>
         this.setState({
           error,
           isLoading: false,
-          formState: "error"
+          formState: "error",
         })
       );
 
-      axios.get(PATH_PERIODO_PAGO_SEMANAS_SERVICE+this.props.match.params.id)
-        .then(result => {
-          this.setState({
-            semanas: result.data,
-            isLoading: false,
-            formState: "ok"
-          });
-        }).catch(error =>
-          this.setState({
-            error,
-            isLoading: false,
-            formState: "error"
-          })
-        );
-
-      axios.get(PATH_PERIODO_PAGO_SERVICE+this.props.match.params.id)
-          .then(result => {
-            this.setState({
-              periodoPago: result.data,
-              isLoading: false,
-              formState: "ok"
-            });
-          }).catch(error =>
-            this.setState({
-              error,
-              isLoading: false,
-              formState: "error"
-            })
-          );
+    axios
+      .get(PATH_PERIODO_PAGO_SERVICE + this.props.match.params.idPeriodoPago)
+      .then((result) => {        
+        this.setState({
+          periodoPago: result.data,
+          isLoading: false,
+        });
+      })
+      .catch((error) =>
+        this.setState({
+          error,
+          isLoading: false,
+          formState: "error",
+        })
+      );
   }
 
-  edit = (idEmpleado, idUbicacion, idSemana) => {
-    let path = `/editarHorarioEmpleado/${idEmpleado}/${idUbicacion}/${idSemana}`;
+  edit = (idPeriodoPago, idEmpleado, idUbicacion, idSemana) => {    
+    let path = `/editarHorarioEmpleado/${idPeriodoPago}/${idEmpleado}/${idUbicacion}/${idSemana}`;
     this.props.history.push(path);
   };
 
   consultar = async () => {
-    let {consultParams} = this.state;
+    let { consultParams } = this.state;
 
-    axios.get(PATH_PERIODO_PAGO_SERVICE+consultParams.ubicacion+'/'+consultParams.semana)
-      .then(result => {
+    let horarioEmpleadoPath =
+      PATH_HORARIO_EMPLEADO_SERVICE + "all/semana/" + consultParams.semana;
+    if (consultParams.ubicacion != "all") {
+      horarioEmpleadoPath =
+        horarioEmpleadoPath + "/ubicacion/" + consultParams.ubicacion;
+    }
+    
+    axios
+      .get(horarioEmpleadoPath)
+      .then((result) => {
         this.setState({
           horarioEmpleado: result.data,
-          rowId:result.data[0].empleado.id,
+          rowId: result.data[0].empleado.id,
           isLoading: false,
-          formState: "ok"
+          formState: "ok",
         });
-      }).catch(error =>
+      })
+      .catch((error) =>
         this.setState({
           error,
+          horarioEmpleado: [],
           isLoading: false,
-          formState: "error"
+          formState: "error",
         })
       );
-  }
+  };
 
   onRowSelect = (row, isSelected, e) => {
-    this.setState({rowId: row.empleado.id});
-  }
+    this.setState({ rowId: row.empleado.id });
+  };
 
   toggle = () => {
     this.setState({
-      modal: !this.state.modal
+      modal: !this.state.modal,
     });
   };
 
   handleChange = (valor, field) => {
-    let {consultParams} = this.state;
-    consultParams[field] = valor;
+    let { consultParams } = this.state;
+    consultParams[field] = valor;    
+
     this.setState(consultParams);
-    this.validateRequired();
-  };
-
-  handleValidation(){
-    let {consultParams} = this.state;
-
-    let errors = {
-      ubicacion: validateRequired(consultParams.ubicacion, "ubicacion"),
-      semana: validateRequired(consultParams.semana, "semana")
-    };
-    let formState = '';
-
-    if(errors.ubicacion || errors.semana){
-      formState = 'invalid';
-    }
-    this.setState({errors: errors, formState: formState});
-    return formState ==! 'invalid';
-  }
-
-  validateRequired = () => {
-    if(this.handleValidation()){
+    if (this.handleValidation()) {
       this.consultar();
     }
+  };
+
+  handleValidation() {
+    let { consultParams } = this.state;
+
+    let errors = {
+      semana: validateRequired(consultParams.semana, "semana"),
+    };
+    let formState = "";
+
+    if (errors.semana) {
+      formState = "invalid";
+    }
+    this.setState({ errors: errors, formState: formState });
+    return formState == !"invalid";
   }
 
   render() {
-    const { horarioEmpleado, ubicaciones, semanas, formState, error, ubicacion, errors,  rowId, consultParams} = this.state;
+    const {
+      horarioEmpleado,
+      ubicaciones,
+      periodoPago,
+      formState,
+      error,
+      errors,
+      rowId,
+      consultParams,
+      isLoading,
+    } = this.state;    
+
+    if (isLoading) {
+      return <Loading />;
+    }
+
+    let messageLabel;
+    if (formState == "error") {
+      messageLabel = (
+        <Alert variant="danger">{error.response.data.message}</Alert>
+      );
+    }
+
+    let messageSemana;
+    if (errors.semana) {
+      messageSemana = (
+        <Alert variant="danger">{this.state.errors.semana}</Alert>
+      );
+    }
 
     let optionUbicaciones;
     if (ubicaciones.length > 0) {
-      optionUbicaciones = ubicaciones.map(ubicacion => (
-        <option
-          key={ubicacion.id}
-          value={ubicacion.id}>
+      optionUbicaciones = ubicaciones.map((ubicacion) => (
+        <option key={ubicacion.id} value={ubicacion.id}>
           {ubicacion.nombre}
         </option>
       ));
     }
 
+    let semanas = periodoPago.semanas;
     let optionSemanas;
-    if (semanas.length > 0) {
-      optionSemanas = semanas.map(semana => (
-        <option
-          key={semana.id}
-          value={semana.id}>
-          Semana:{semana.id} [{semana.fechaInicio}] - [{semana.fechaFin}]
+    if (semanas && semanas.length > 0) {
+      optionSemanas = semanas.map((semana) => (
+        <option key={semana.id} value={semana.id}>
+          Semana:{semana.numeroSemana} [{semana.fechaInicio}] - [
+          {semana.fechaFin}]
         </option>
       ));
-    }
-
-    let messageError;
-    if (formState == 'error') {
-      messageError = <Alert variant="danger">{error.response.data.message}</Alert>;
     }
 
     const columns = [
@@ -194,44 +212,51 @@ class HorarioEmpleado extends Component {
         dataField: "empleado.id",
         text: "Id",
         isKey: "true",
-        headerStyle: { width: "3%" }
+        headerStyle: { width: "3%" },
       },
       {
         dataField: "empleado.apellidos",
-        text: "Apellidos"
+        text: "Apellidos",
       },
       {
         dataField: "empleado.nombres",
-        text: "Nombres"
+        text: "Nombres",
       },
       {
-        dataField: "horarioSemana.lunes.fechas",
-        text: "Lunes"
+        dataField: "lunes.horas",
+        text: "Lunes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.martes.fechas",
-        text: "Martes"
+        dataField: "martes.horas",
+        text: "Martes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.miercoles.fechas",
-        text: "Miercoles"
+        dataField: "miercoles.horas",
+        text: "Miercoles",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.jueves.fechas",
-        text: "Jueves"
+        dataField: "jueves.horas",
+        text: "Jueves",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.viernes.fechas",
-        text: "Viernes"
+        dataField: "viernes.horas",
+        text: "Viernes",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.sabado.fechas",
-        text: "Sabado"
+        dataField: "sabado.horas",
+        text: "Sabado",
+        formatter: horasFormatter,
       },
       {
-        dataField: "horarioSemana.domingo.fechas",
-        text: "Domingo"
-      }
+        dataField: "domingo.horas",
+        text: "Domingo",
+        formatter: horasFormatter,
+      },
     ];
 
     const selectRow = {
@@ -239,56 +264,67 @@ class HorarioEmpleado extends Component {
       selected: [!horarioEmpleado.horarioSemana ? rowId : 0],
       clickToSelect: true,
       bgColor: "rgb(89, 195, 245)",
-      onSelect: this.onRowSelect
+      onSelect: this.onRowSelect,
     };
 
-    let tableHorario
-    if(horarioEmpleado.length > 0){
-      tableHorario =
+    let tableHorario = (
       <Col>
         <Container className="App">
           <Row>
             <Col>
-              <FormGroup>
+              <h5>Horario</h5>
+            </Col>
+            <Col sm="2">
+              <Form-Group>
+                <Form.Control
+                  as="select"
+                  value={this.state.consultParams.ubicacion}
+                  onChange={(e) => {
+                    this.handleChange(e.target.value, "ubicacion");
+                  }}
+                >
+                  <option value="all">Ubicaciones</option>
+                  {optionUbicaciones}
+                </Form.Control>
+              </Form-Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group>
                 <BootstrapTable
                   keyField="empleado.id"
                   data={horarioEmpleado}
                   columns={columns}
                   selectRow={selectRow}
                   pagination={paginationFactory(options)}
-                  />
-              </FormGroup>
+                />
+              </Form.Group>
             </Col>
           </Row>
         </Container>
-      </Col>;
-    }
-
-    let messageUbicacion;
-    if(errors.ubicacion){
-      messageUbicacion = <Alert variant="danger">{this.state.errors.ubicacion}</Alert>;
-    }
-
-    let messageSemana;
-    if(errors.semana){
-      messageSemana = <Alert variant="danger">{this.state.errors.semana}</Alert>;
-    }
+      </Col>
+    );
 
     const modal = (
-      <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
-        <ModalHeader onClick={this.toggle}>Confirmar Eliminar</ModalHeader>
-        <ModalBody>
+      <Modal
+        show={this.state.modal}
+        onClick={this.toggle}
+        className={this.props.className}
+      >
+        <Modal.Header onClick={this.toggle}>Confirmar Eliminar</Modal.Header>
+        <Modal.Body>
           Esta seguro de eliminar el horario para la ubicacion{" "}
           {horarioEmpleado.nombre}
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="primary" onClick={() => this.remove(rowId)}>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-primary" onClick={() => this.remove(rowId)}>
             Eliminar
           </Button>{" "}
-          <Button variant="secondary" onClick={this.toggle}>
+          <Button variant="outline-secondary" onClick={this.toggle}>
             Cancelar
           </Button>
-        </ModalFooter>
+        </Modal.Footer>
       </Modal>
     );
     return (
@@ -306,71 +342,63 @@ class HorarioEmpleado extends Component {
                     <h5>Periodo Pago</h5>
                   </Col>
                   <Col xs="2">
-                    <FormGroup>
-                      <Label>Fecha Inicio</Label>
-                      <Input type="text"
+                    <Form.Group>
+                      <Form.Label>Fecha Inicio</Form.Label>
+                      <Form.Control
                         disabled
-                        value={this.state.periodoPago.fechaInicio}/>
-                    </FormGroup>
+                        value={this.state.periodoPago.fechaInicio}
+                      />
+                    </Form.Group>
                   </Col>
                   <Col xs="2">
-                    <FormGroup>
-                      <Label>Fecha Fin</Label>
-                      <Input type="text"
+                    <Form-Group>
+                      <Form.Label>Fecha Fin</Form.Label>
+                      <Form.Control
                         disabled
-                        value={this.state.periodoPago.fechaFin} />
-                    </FormGroup>
-                  </Col>
-                  <Col sm="2">
-                    <FormGroup>
-                      <Label>Ubicacion</Label>
-                      <Input
-                        ref="ubicacion"
-                        as="select"
-                        value={this.state.consultParams.ubicacion}
-                        onChange={e => {
-                          this.handleChange(e.target.value, "ubicacion");
-                        }} >
-                        <option value=''>Seleccionar</option>
-                        {optionUbicaciones}
-                      </Input>
-                      {messageUbicacion }
-                    </FormGroup>
+                        value={this.state.periodoPago.fechaFin}
+                      />
+                    </Form-Group>
                   </Col>
                   <Col>
-                    <FormGroup>
-                      <Label>Semana</Label>
-                        <Input
-                          ref="semana"
-                          as="select"
-                          value={this.state.consultParams.semana}
-                          onChange={e => {
-                            this.handleChange(e.target.value, "semana");
-                          }} >
-                          <option value=''>Seleccionar</option>
-                          {optionSemanas}
-                        </Input>
-                        {messageSemana }
-                    </FormGroup>
+                    <Form.Group>
+                      <Form.Label>Semana</Form.Label>
+                      <Form.Control
+                        as="select"
+                        value={this.state.consultParams.semana}
+                        onChange={(e) => {
+                          this.handleChange(e.target.value, "semana");
+                        }}
+                      >
+                        <option value="">Seleccionar</option>
+                        {optionSemanas}
+                      </Form.Control>
+                      {messageSemana}
+                    </Form.Group>
                   </Col>
                 </Row>
               </Container>
             </Col>
-            {tableHorario }
+            {tableHorario}
             <Col>
-              <FormGroup>
-                <Button variant="primary" onClick={(idEmpleado, idUbicacion, idSemana) => this.edit(rowId, consultParams.ubicacion, consultParams.semana)}>
+              <Form.Group>
+                <Button  variant="outline-primary"
+                  onClick={(idEmpleado, idUbicacion, idSemana) =>
+                    this.edit(
+                      this.props.match.params.idPeriodoPago,
+                      rowId,
+                      consultParams.ubicacion,
+                      consultParams.semana
+                    )
+                  }
+                >
                   Modificar
-                </Button>
-                {"    "}
-                <Button variant="primary" onClick={this.toggle}>
-                  Eliminar
-                </Button>
-              </FormGroup>
+                </Button>{"    "}
+                <Button variant="outline-primary" onClick={this.toggle}>Eliminar</Button>{"    "}                
+                <Button variant="outline-secondary" onClick={this.regresar}>Eliminar</Button>{"    "}
+                <Button tag={Link} href='/PeriodoPago' variant="outline-secondary">Regresar</Button>
+              </Form.Group>
             </Col>
-            <Col>
-             {messageError }
-            </Col>
+            <Col>{messageLabel}</Col>
           </Form>
         </Container>
       </div>

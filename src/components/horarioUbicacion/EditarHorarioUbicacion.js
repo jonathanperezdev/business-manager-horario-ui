@@ -15,15 +15,16 @@ import Constant from "common/Constant";
 import axios from "axios";
 import Datetime from "react-datetime";
 import "css/react-datetime.css";
+import Loading from "common/Loading";
 
 const PATH_HORARIO_UBICACION_SERVICE =
   Constant.HORARIO_API + '/ubicacion';
 
 const PATH_UBICACIONES_SERVICE = 
-Constant.HORARIO_API + '/ubicacion/all';
+PATH_HORARIO_UBICACION_SERVICE+'/all';
 
 const PATH_UBICACIONES_SIN_HORARIO_SERVICE =
-Constant.HORARIO_API + '/ubicacion/ubicacionesSinHorario';
+PATH_HORARIO_UBICACION_SERVICE+'/ubicacionesSinHorario';
 
 const TIME_FORMAT = Constant.TIME_FORMAT;
 
@@ -44,20 +45,16 @@ class EditarHorarioUbicacion extends Component {
   }
 
   componentDidMount() {    
-    let id = this.props.match.params.id;
-    if (id !='new') {
-      this.loadUbicacion(PATH_UBICACIONES_SERVICE);
-      this.loadHorarioUbicacion(PATH_HORARIO_UBICACION_SERVICE + '/'+id);
-    } else {
-      this.loadUbicacion(PATH_UBICACIONES_SIN_HORARIO_SERVICE);
-    }
+    let id = this.props.match.params.id;    
+    this.loadUbicacion(PATH_UBICACIONES_SERVICE);
+    this.loadHorarioUbicacion(PATH_HORARIO_UBICACION_SERVICE + '/'+id);    
   }
 
   loadUbicacion = (pathService) => {
     axios.get(pathService)
       .then(result => {
         let {fields} = this.state;
-        fields.id = this.props.match.params.id;
+        fields.id = this.props.match.params.id;        
         this.setState({
           ubicaciones: result.data,
           isLoading: false,
@@ -116,18 +113,6 @@ class EditarHorarioUbicacion extends Component {
     );
   };
 
-  nuevo = () => {
-    let {fields} = this.state;
-
-    fields.id='new';
-    fields.nombre='';
-    fields.horarioSemana=null;
-
-    this.loadUbicacion(PATH_UBICACIONES_SIN_HORARIO_SERVICE);
-
-    this.setState({fields: fields, formState: ''});
-  }
-
   handleTime = (date, dia, field) => {
     let {fields } = this.state;
     let diaSemana = fields.horarioSemana[dia];
@@ -137,30 +122,18 @@ class EditarHorarioUbicacion extends Component {
     this.setState({ fields });
   };
 
-  handleUbicacionChange = e => {
-    let { fields } = this.state;
-
-    if(!e.target.value){
-      this.nuevo();
-    }else{
-      fields.id = e.target.value;
-      this.loadHorarioUbicacion(PATH_HORARIO_UBICACION_SERVICE + '/horarioDefault/'+e.target.value);
-    }
-    this.setState({ fields });
-  };
-
   render() {
     const { fields, ubicaciones, formState, error, isLoading } = this.state;
 
     if (isLoading) {
-      return <p>Loading...</p>;
+      return  <Loading/>
     }
 
     let messageLabel;
     if (formState == 'error') {
       messageLabel = <Alert variant="danger">{error.response.data.message}</Alert>;
     }else if(formState == 'success'){
-      messageLabel = <Alert variant="success">Se creo correctamente el horario para la ubicacion {fields.nombre}</Alert>;
+      messageLabel = <Alert variant="success">Se guardo correctamente el horario para la ubicacion {fields.nombre}</Alert>;
     }
 
     let optionUbicaciones;
@@ -172,8 +145,7 @@ class EditarHorarioUbicacion extends Component {
           {ubicacion.nombre}
         </option>
       ));
-    }
-
+    }    
     return (
       <div>
         <AppNavbar />
@@ -184,9 +156,8 @@ class EditarHorarioUbicacion extends Component {
               <Form.Group>
                 <Form.Label>Ubicacion</Form.Label>
                 <Form.Control                  
-                  as="select"
-                  onChange={this.handleUbicacionChange}
-                  disabled={fields.id != 'new'}
+                  as="select"                  
+                  disabled={true}
                   value={this.state.fields.id}>
                   <option value=''>Seleccionar</option>
                   {optionUbicaciones}
@@ -505,9 +476,8 @@ class EditarHorarioUbicacion extends Component {
               </Col>
             </Container>
             <Form.Group>
-              <Button variant="outline-primary" onClick={this.save}>Guardar</Button>{"  "}
-              <Button onClick={this.nuevo} variant="outline-secondary">Nuevo</Button>{"  "}
-              <Button tag={Link} to='/HorarioUbicacion' variant="outline-secondary">Regresar</Button>
+              <Button variant="outline-primary" onClick={this.save}>Guardar</Button>{"  "}              
+              <Button tag={Link} href='/HorarioUbicacion' variant="outline-secondary">Regresar</Button>
             </Form.Group>
             <Col>
              {messageLabel }

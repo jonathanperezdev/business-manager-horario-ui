@@ -21,8 +21,8 @@ class App extends Component {
           <Route path='/horarioUbicacion' exact={true} component={HorarioUbicacion}/>
           <Route path='/horarioUbicacion/:id' exact={true} component={EditarHorarioUbicacion}/>
           <Route path='/periodoPago' exact={true} component={PeriodoPago}/>
-          <Route path='/horarioEmpleado/:id' exact={true} component={HorarioEmpleado}/>
-          <Route path='/editarHorarioEmpleado/:idEmpleado/:idUbicacion/:idSemana' exact={true} component={EditarHorarioEmpleado}/>
+          <Route path='/horarioEmpleado/:idPeriodoPago' exact={true} component={HorarioEmpleado}/>
+          <Route path='/editarHorarioEmpleado/:idPeriodoPago/:idEmpleado/:idUbicacion/:idSemana' exact={true} component={EditarHorarioEmpleado}/>
         </Switch>
       </Router>
     );

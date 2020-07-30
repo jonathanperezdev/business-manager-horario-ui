@@ -6,16 +6,28 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "axios": "^0.19.2",
+    "babel": "^6.23.0",
+    "bootstrap": "^4.5.0",
+    "moment": "^2.27.0",
     "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
+    "react-bootstrap-table-next": "^4.0.3",
+    "react-bootstrap-table2-paginator": "^2.1.2",
+    "react-cookie": "^4.0.3",
+    "react-datetime": "^2.16.3",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "3.4.1",
+    "reactstrap": "^8.5.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "PORT=9001 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:8001",
   "eslintConfig": {
     "extends": "react-app"
   },
