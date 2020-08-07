@@ -110,8 +110,7 @@ class HorarioEmpleado extends Component {
           isLoading: false,
           formState: "ok",
         });
-      })
-      .catch((error) =>
+      }).catch((error) =>
         this.setState({
           error,
           horarioEmpleado: [],
