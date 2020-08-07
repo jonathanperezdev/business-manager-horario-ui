@@ -1,6 +1,6 @@
 import Moment from 'moment';
 
-const HORARIO_API = '/horario/v1/api';
+const HORARIO_API = '/horario';
 
 //Periodo Pago
 const PERIODO_PAGO_SERVICE = '/periodoPago/';
