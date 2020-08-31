@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import 'css/App.css';
 import AppNavbar from 'menu/AppNavbar';
-import {Container } from 'reactstrap';
+import {Container } from 'react-bootstrap';
 
 class Home extends Component {
   render() {
