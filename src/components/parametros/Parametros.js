@@ -1,13 +1,5 @@
 import React, { Component } from "react";
-import {
-  Container,
-  Col,
-  Form,
-  Button,
-  Alert,
-  Modal,
-  Row,
-} from "react-bootstrap";
+import {Container, Col, Form, Button, Alert, Modal, Row} from "react-bootstrap";
 import BootstrapTable from "react-bootstrap-table-next";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import AppNavbar from "menu/AppNavbar";
@@ -28,6 +20,7 @@ class Parametros extends Component {
     id: "",
     nombre: "",
     valor: "",
+    componente: ""
   };
 
   constructor(props) {
@@ -35,6 +28,7 @@ class Parametros extends Component {
 
     this.state = {
       parametros: [],
+      componentes: [],
       isLoading: true,
       error: null,
       errors: {},
@@ -65,6 +59,20 @@ class Parametros extends Component {
           modal: false,
         })
       );
+
+    axios
+      .get(PATH_PARAMETRO_SERVICE + "/componentes")
+      .then((result) => {
+        this.setState({componentes: result.data, isExistData: true, isLoading: false});        
+      })
+      .catch((error) =>
+        this.setState({
+          error,
+          formState: "error",
+          isLoading: false,
+          modal: false,
+        })
+      );
   }
 
   onRowSelect(row, isSelected, e) {
@@ -78,6 +86,7 @@ class Parametros extends Component {
     fields.id = parametro.id;
     fields.nombre = parametro.nombre;
     fields.valor = parametro.valor;
+    fields.componente = parametro.componente;
     this.setState({ fields: fields });
   };
 
@@ -87,6 +96,7 @@ class Parametros extends Component {
     fields.id = "";
     fields.nombre = "";
     fields.valor = "";
+    fields.componente = "";
 
     this.setState({ fields: fields });
   };
@@ -99,8 +109,7 @@ class Parametros extends Component {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-    })
-      .then(() => {
+    }).then(() => {
         let updatedParametros = [...this.state.parametros].filter((i) => i.id != id);
         
         let isExistData = true;        
@@ -122,6 +131,7 @@ class Parametros extends Component {
     let errors = {
       nombre: validateRequired(fields.nombre, "nombre"),
       valor: validateRequired(fields.valor, "valor"),
+      componente: validateRequired(fields.valor, "compoenente")
     };
     let formState = "";
 
@@ -205,6 +215,7 @@ class Parametros extends Component {
       isExistData,
       errors,
       formState,
+      componentes
     } = this.state;
 
     if (isLoading) {
@@ -232,6 +243,11 @@ class Parametros extends Component {
       messageValor = <Alert variant="danger">{this.state.errors.valor}</Alert>;
     }
 
+    let messageComponente;
+    if (errors.componente) {
+      messageComponente = <Alert variant="danger">{this.state.errors.componente}</Alert>;
+    }
+
     const columns = [
       {
         dataField: "nombre",
@@ -242,6 +258,10 @@ class Parametros extends Component {
         dataField: "valor",
         text: "Valor",
       },
+      {
+        dataField: "componente",
+        text: "Componente",
+      }
     ];
 
     const selectRow = {
@@ -254,14 +274,14 @@ class Parametros extends Component {
 
     const actionTittle = fields.id ? "Actualizar" : "Crear";
     const modal = (
-      <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
-        <Modal.Header onClick={this.toggle}>Confirmar {actionTittle}</Modal.Header>
-    <Modal.Body>Esta seguro de {actionTittle} el parametro</Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-primary" onClick={() => this.save()}>Aceptar</Button>{" "}
-          <Button variant="outline-secondary" onClick={this.toggle}>Cancelar</Button>
-        </Modal.Footer>
-      </Modal>
+    <Modal show={this.state.modal} onClick={this.toggle} className={this.props.className}>
+      <Modal.Header onClick={this.toggle}>Confirmar {actionTittle}</Modal.Header>
+      <Modal.Body>Esta seguro de {actionTittle} el parametro</Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-primary" onClick={() => this.save()}>Aceptar</Button>{" "}
+        <Button variant="outline-secondary" onClick={this.toggle}>Cancelar</Button>
+      </Modal.Footer>
+    </Modal>
     );
 
     const modalDelete = (
@@ -274,6 +294,12 @@ class Parametros extends Component {
         </Modal.Footer>
       </Modal>
     );
+
+    let optionComponente = componentes.map((componente) => (
+      <option key={componente} value={componente}>
+        {componente}
+      </option>
+    ));
 
     return (
       <div>
@@ -314,6 +340,21 @@ class Parametros extends Component {
                         value={fields.valor}
                       />
                       {messageValor}
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group controlId="parametro.componente">
+                      <Form.Label>Componente</Form.Label>
+                      <Form.Control
+                      as="select"
+                      onChange={(e) => {
+                        this.handleChange(e.target.value, "componente");
+                      }}
+                      value={fields.componente}>
+                      <option value="">Seleccionar</option>
+                      {optionComponente}
+                    </Form.Control>
+                    {messageComponente}
                     </Form.Group>
                   </Col>
                 </Row>
